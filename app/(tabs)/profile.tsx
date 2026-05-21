@@ -1,4 +1,5 @@
 import { useRouter } from 'expo-router';
+import { useMemo } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -6,14 +7,32 @@ import { BrandWordmark } from '@/components/BrandWordmark';
 import { MaskingTape } from '@/components/ui/MaskingTape';
 import { PaperCard } from '@/components/ui/PaperCard';
 import { Text } from '@/components/ui/Text';
+import { findCafe } from '@/constants/cafes-seed';
 import { colors } from '@/constants/theme';
 import { useAuthStore } from '@/stores/auth';
+import { useVisitsStore } from '@/stores/visits';
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const signOut = useAuthStore((s) => s.signOut);
+  const visits = useVisitsStore((s) => s.visits);
+
+  const stats = useMemo(() => {
+    const districts = new Set(
+      visits.map((v) => findCafe(v.cafeId)?.district).filter(Boolean),
+    );
+    const avg =
+      visits.length === 0
+        ? '- -'
+        : (visits.reduce((acc, v) => acc + v.rating, 0) / visits.length).toFixed(1);
+    return {
+      count: visits.length,
+      districts: districts.size,
+      avg,
+    };
+  }, [visits]);
 
   async function handleSignOut() {
     await signOut();
@@ -87,9 +106,12 @@ export default function ProfileScreen() {
         </Text>
         <PaperCard padding={20} shadow="sticker">
           <View style={{ flexDirection: 'row', gap: 16 }}>
-            <StatBox value="0" label="붙인 스티커" />
-            <StatBox value="0" label="동네" />
-            <StatBox value="- -" label="평균 별점" />
+            <StatBox value={stats.count.toString()} label="붙인 스티커" />
+            <StatBox value={stats.districts.toString()} label="동네" />
+            <StatBox
+              value={stats.avg === '- -' ? '- -' : `★ ${stats.avg}`}
+              label="평균 별점"
+            />
           </View>
         </PaperCard>
       </View>

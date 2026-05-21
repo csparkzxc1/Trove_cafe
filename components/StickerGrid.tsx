@@ -14,6 +14,9 @@ export type StickerItem = Omit<
   'rotation' | 'imageBg' | 'numStamp'
 > & {
   id: string;
+  rotationOverride?: number;
+  imageBgOverride?: StickerCardProps['imageBg'];
+  numStampOverride?: string;
 };
 
 type Props = {
@@ -46,10 +49,18 @@ export function StickerGrid({ items, startNumber = 1 }: Props) {
         >
           {row.map((item, colIdx) => {
             const flatIdx = rowIdx * 2 + colIdx;
-            const rotation = rotationFor(flatIdx);
+            const rotation = item.rotationOverride ?? rotationFor(flatIdx);
             const marginTop = marginTopFor(flatIdx);
-            const bg = imageBgForIndex(flatIdx);
-            const num = (startNumber + flatIdx).toString().padStart(3, '0');
+            const bg = item.imageBgOverride ?? imageBgForIndex(flatIdx);
+            const num =
+              item.numStampOverride ??
+              `No ${(startNumber + flatIdx).toString().padStart(3, '0')}`;
+            const {
+              rotationOverride: _r,
+              imageBgOverride: _b,
+              numStampOverride: _n,
+              ...cardProps
+            } = item;
             return (
               <Animated.View
                 key={item.id}
@@ -60,10 +71,10 @@ export function StickerGrid({ items, startNumber = 1 }: Props) {
                 style={{ flex: 1, marginTop }}
               >
                 <StickerCard
-                  {...item}
+                  {...cardProps}
                   rotation={rotation}
                   imageBg={bg}
-                  numStamp={`No ${num}`}
+                  numStamp={num}
                 />
               </Animated.View>
             );

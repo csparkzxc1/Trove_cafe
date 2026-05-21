@@ -32,6 +32,13 @@
       "expo-router",
       "expo-font",
       [
+        "expo-image-picker",
+        {
+          "photosPermission": "선택한 사진을 스티커로 만들기 위해 사진 라이브러리 접근 권한이 필요해요.",
+          "cameraPermission": "카페에서 찍은 사진을 스티커로 만들기 위해 카메라 권한이 필요해요."
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",

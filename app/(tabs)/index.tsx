@@ -1,32 +1,96 @@
 import { useRouter } from 'expo-router';
+import { useMemo } from 'react';
 import { ScrollView, View } from 'react-native';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BrandFooter } from '@/components/BrandFooter';
 import { BrandWordmark } from '@/components/BrandWordmark';
-import { StickerGrid, type StickerItem } from '@/components/StickerGrid';
 import { DiaryStatBlock } from '@/components/DiaryStatBlock';
+import { PolaroidCard } from '@/components/PolaroidCard';
+import { StickerGrid, type StickerItem } from '@/components/StickerGrid';
 import { IntroBadge } from '@/components/ui/IntroBadge';
 import { Text } from '@/components/ui/Text';
-import { CAFES_SEED } from '@/constants/cafes-seed';
+import { CAFES_SEED, findCafe } from '@/constants/cafes-seed';
 import { colors } from '@/constants/theme';
 import { useAuthStore } from '@/stores/auth';
+import { useVisitsStore, type Visit } from '@/stores/visits';
+
+const MONTH_LABEL = (() => {
+  const d = new Date();
+  return `${d.getFullYear()} · ${d
+    .toLocaleString('en-US', { month: 'short' })
+    .toUpperCase()}`;
+})();
+
+function formatDateLine(iso: string): string {
+  const d = new Date(iso);
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  const hh = String(d.getHours()).padStart(2, '0');
+  const mi = String(d.getMinutes()).padStart(2, '0');
+  const weekday = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'][d.getDay()];
+  return `${yyyy}.${mm}.${dd} · ${weekday} · ${hh}:${mi}`;
+}
 
 export default function CollectionScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const user = useAuthStore((s) => s.user);
+  const visits = useVisitsStore((s) => s.visits);
 
-  const items: StickerItem[] = CAFES_SEED.map((c) => ({
-    id: c.id,
-    iconKey: c.icon,
-    nameKo: c.name,
-    meta: `${c.district} · ${c.category}`,
-    note: c.note,
-    visited: false,
-    onPress: () => router.push(`/cafe/${c.id}`),
-  }));
+  const visitByCafe = useMemo(() => {
+    const map = new Map<string, Visit>();
+    for (const v of visits) {
+      if (!map.has(v.cafeId)) map.set(v.cafeId, v);
+    }
+    return map;
+  }, [visits]);
+
+  const items: StickerItem[] = useMemo(
+    () =>
+      CAFES_SEED.map((c) => {
+        const v = visitByCafe.get(c.id);
+        return {
+          id: c.id,
+          iconKey: c.icon,
+          nameKo: c.name,
+          meta: `${c.district} · ${c.category}`,
+          note: v ? v.orderedMenu || '~' : c.note,
+          visited: !!v,
+          photoUri: v?.photoUri ?? null,
+          rotationOverride: v?.rotationDeg,
+          imageBgOverride: v?.imageBg,
+          onPress: () => router.push(`/cafe/${c.id}`),
+        };
+      }),
+    [visitByCafe, router],
+  );
+
+  const stats = useMemo(() => {
+    const districts = new Set(
+      visits.map((v) => findCafe(v.cafeId)?.district).filter(Boolean),
+    );
+    const signatureMatches = visits.filter((v) => {
+      const cafe = findCafe(v.cafeId);
+      if (!cafe) return false;
+      return v.orderedMenu.includes(cafe.signature_menu);
+    }).length;
+    const avg =
+      visits.length === 0
+        ? '- -'
+        : (visits.reduce((acc, v) => acc + v.rating, 0) / visits.length).toFixed(1);
+    return {
+      visitCount: visits.length,
+      districts: districts.size.toString(),
+      signature: signatureMatches.toString(),
+      avg,
+    };
+  }, [visits]);
+
+  const latest = visits[0];
+  const latestCafe = latest ? findCafe(latest.cafeId) : undefined;
 
   return (
     <ScrollView
@@ -74,12 +138,7 @@ export default function CollectionScreen() {
           <Text variant="displayKr" size={30} color={colors.mochaDark}>
             오늘 카페,{' '}
           </Text>
-          <Text
-            variant="handwrite"
-            size={38}
-            color={colors.honey}
-            style={{ marginHorizontal: 2 }}
-          >
+          <Text variant="handwrite" size={38} color={colors.honey} style={{ marginHorizontal: 2 }}>
             도감
           </Text>
           <Text variant="displayKr" size={30} color={colors.mochaDark}>
@@ -98,16 +157,58 @@ export default function CollectionScreen() {
 
       <Animated.View entering={FadeInDown.delay(300).duration(700)}>
         <DiaryStatBlock
-          pageNumber={0}
-          monthLabel="2026 · MAY"
-          caption="첫 스티커를 기다리는 중"
+          pageNumber={stats.visitCount}
+          monthLabel={MONTH_LABEL}
+          caption={
+            stats.visitCount === 0
+              ? '첫 스티커를 기다리는 중'
+              : '조금씩 채워지는 중이에요'
+          }
           stats={[
-            { value: '0', label: '동네' },
-            { value: '0', label: '시그니처' },
-            { value: '- -', label: '평균' },
+            { value: stats.districts, label: '동네' },
+            { value: stats.signature, label: '시그니처' },
+            { value: stats.avg === '- -' ? '- -' : `★ ${stats.avg}`, label: '평균' },
           ]}
         />
       </Animated.View>
+
+      {latest && latestCafe ? (
+        <Animated.View
+          entering={FadeInDown.delay(400).duration(700)}
+          style={{ marginTop: 8, marginBottom: 28 }}
+        >
+          <View style={{ alignItems: 'center', marginBottom: 12 }}>
+            <Text
+              variant="handwriteReg"
+              size={22}
+              color={colors.honey}
+              style={{ transform: [{ rotate: '-1.5deg' }] }}
+            >
+              방금 붙인 스티커
+            </Text>
+            <Text
+              variant="mono"
+              size={9}
+              letterSpacing={3}
+              uppercase
+              color={colors.mochaLight}
+              style={{ marginTop: 4 }}
+            >
+              latest entry
+            </Text>
+          </View>
+          <PolaroidCard
+            nameKo={latestCafe.name}
+            location={`${latestCafe.district} · ${latestCafe.category}`}
+            iconKey={latestCafe.icon}
+            photoUri={latest.photoUri}
+            order={latest.orderedMenu}
+            rating={latest.rating}
+            dateLine={formatDateLine(latest.visitedAt)}
+            visited
+          />
+        </Animated.View>
+      ) : null}
 
       <View
         style={{
@@ -115,6 +216,7 @@ export default function CollectionScreen() {
           justifyContent: 'space-between',
           alignItems: 'baseline',
           marginBottom: 20,
+          marginTop: 8,
           paddingHorizontal: 4,
         }}
       >
@@ -132,7 +234,7 @@ export default function CollectionScreen() {
           </Text>
         </View>
         <Text variant="mono" size={9} letterSpacing={1.5} uppercase color={colors.mochaLight}>
-          0 · sticked
+          {stats.visitCount} · sticked
         </Text>
       </View>
 

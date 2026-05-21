@@ -1,3 +1,4 @@
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { View } from 'react-native';
 
@@ -13,8 +14,10 @@ type Props = {
   dateLine: string;
   rating?: number;
   iconKey?: DrinkIconKey;
+  photoUri?: string | null;
   visited?: boolean;
   placeholderText?: string;
+  rotation?: number;
 };
 
 export function PolaroidCard({
@@ -24,8 +27,10 @@ export function PolaroidCard({
   dateLine,
   rating = 0,
   iconKey,
+  photoUri,
   visited = true,
   placeholderText = '방문 전',
+  rotation = -2,
 }: Props) {
   return (
     <View style={{ alignItems: 'center', paddingTop: 18 }}>
@@ -36,7 +41,7 @@ export function PolaroidCard({
             padding: 16,
             paddingBottom: 22,
             borderRadius: radii.polaroid,
-            transform: [{ rotate: '-2deg' }],
+            transform: [{ rotate: `${rotation}deg` }],
             maxWidth: 320,
             width: '90%',
           },
@@ -64,56 +69,65 @@ export function PolaroidCard({
             overflow: 'hidden',
           }}
         >
-          <LinearGradient
-            colors={visited
-              ? [colors.dusty, colors.dustyLight, colors.honeyLight]
-              : [colors.latteDark, colors.cream, colors.latteDark]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={{
-              flex: 1,
-              alignItems: 'center',
-              justifyContent: 'center',
-              position: 'relative',
-            }}
-          >
-            {visited ? (
-              iconKey ? (
-                <DrinkIcon iconKey={iconKey} size={160} color={colors.mocha} />
+          {photoUri ? (
+            <Image
+              source={{ uri: photoUri }}
+              style={{ width: '100%', height: '100%' }}
+              contentFit="cover"
+            />
+          ) : (
+            <LinearGradient
+              colors={
+                visited
+                  ? [colors.dusty, colors.dustyLight, colors.honeyLight]
+                  : [colors.latteDark, colors.cream, colors.latteDark]
+              }
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{
+                flex: 1,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              {visited ? (
+                iconKey ? (
+                  <DrinkIcon iconKey={iconKey} size={160} color={colors.mocha} />
+                ) : (
+                  <FeatureDrinkIcon size={180} color={colors.mocha} />
+                )
               ) : (
-                <FeatureDrinkIcon size={180} color={colors.mocha} />
-              )
-            ) : (
-              <Text
-                variant="handwriteReg"
-                size={26}
-                color={colors.mochaLight}
-                style={{ transform: [{ rotate: '-2deg' }] }}
-              >
-                {placeholderText}
-              </Text>
-            )}
-            {visited ? (
-              <View
-                style={{
-                  position: 'absolute',
-                  bottom: 16,
-                  right: 16,
-                  flexDirection: 'row',
-                  gap: 2,
-                }}
-              >
-                {[1, 2, 3, 4, 5].map((n) => (
-                  <StarIcon
-                    key={n}
-                    size={14}
-                    color={colors.cream}
-                    filled={n <= Math.round(rating)}
-                  />
-                ))}
-              </View>
-            ) : null}
-          </LinearGradient>
+                <Text
+                  variant="handwriteReg"
+                  size={26}
+                  color={colors.mochaLight}
+                  style={{ transform: [{ rotate: '-2deg' }] }}
+                >
+                  {placeholderText}
+                </Text>
+              )}
+            </LinearGradient>
+          )}
+          {visited ? (
+            <View
+              style={{
+                position: 'absolute',
+                bottom: 16,
+                right: 16,
+                flexDirection: 'row',
+                gap: 2,
+              }}
+            >
+              {[1, 2, 3, 4, 5].map((n) => (
+                <StarIcon
+                  key={n}
+                  size={14}
+                  color={photoUri ? colors.cream : colors.mocha}
+                  filled={n <= Math.round(rating)}
+                />
+              ))}
+            </View>
+          ) : null}
         </View>
 
         <View style={{ alignItems: 'center' }}>

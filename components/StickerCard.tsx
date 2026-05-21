@@ -1,3 +1,4 @@
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, View, type ViewStyle } from 'react-native';
 
@@ -16,6 +17,7 @@ export type StickerCardProps = {
   rotation?: number;
   imageBg?: ImageBgVariant;
   iconKey: DrinkIconKey;
+  photoUri?: string | null;
   nameKo: string;
   meta: string;
   note?: string;
@@ -29,6 +31,7 @@ export function StickerCard({
   rotation = 0,
   imageBg = 'cream',
   iconKey,
+  photoUri,
   nameKo,
   meta,
   note,
@@ -146,22 +149,36 @@ export function StickerCard({
           position: 'relative',
         }}
       >
-        <LinearGradient
-          colors={gradient}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={{
-            position: 'absolute',
-            top: 0,
-            bottom: 0,
-            left: 0,
-            right: 0,
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <DrinkIcon iconKey={iconKey} size={72} color={colors.mocha} />
-        </LinearGradient>
+        {photoUri ? (
+          <Image
+            source={{ uri: photoUri }}
+            style={{
+              position: 'absolute',
+              top: 0,
+              bottom: 0,
+              left: 0,
+              right: 0,
+            }}
+            contentFit="cover"
+          />
+        ) : (
+          <LinearGradient
+            colors={gradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{
+              position: 'absolute',
+              top: 0,
+              bottom: 0,
+              left: 0,
+              right: 0,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <DrinkIcon iconKey={iconKey} size={72} color={colors.mocha} />
+          </LinearGradient>
+        )}
         <View
           style={{
             position: 'absolute',

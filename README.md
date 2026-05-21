@@ -208,19 +208,20 @@ create policy "auth users add cafes" on cafes for insert
 **완료**
 - Expo Router + NativeWind v4 + 폰트 5종 세팅
 - 디자인 토큰 (TS / Tailwind 동기)
-- 재사용 컴포넌트 `Text` (variant 11종), `Chip`, `PaperCard`, `MaskingTape`, `IntroBadge`, `BrandWordmark`
+- 재사용 컴포넌트 `Text` (variant 11종), `Chip`, `PaperCard`, `MaskingTape`, `IntroBadge`, `BrandWordmark`, `BrandFooter`, `StarRating`, `PhotoPicker`
 - 음료 SVG 6종 + `StarIcon`, `EmptyDishIcon`, `FeatureDrinkIcon`
-- `StickerCard` (visited/empty), `StickerGrid` (회전·어긋난 marginTop + fade-up stagger), `DiaryStatBlock`, `PolaroidCard`
-- Auth 분기, login / signup 화면 (latte 배경 + cream 폼 카드 + masking tape)
-- 도감 메인 (`/(tabs)/index`) — 헤더 + Intro + DiaryStatBlock(0번째 페이지) + 12개 시드 카페 empty 콜라주 + manifesto
-- 카페 상세 (`/cafe/[id]`) — placeholder 폴라로이드 + signature + vibe chips + "방문 기록 남기기" placeholder toast
+- `StickerCard` (visited/empty, 사진 썸네일 지원), `StickerGrid`, `DiaryStatBlock`, `PolaroidCard` (사진/별점 렌더링)
+- Auth 분기 (zustand persist), login / signup 화면
+- 도감 메인 — 통계 라이브 반영, "방금 붙인 스티커" 폴라로이드, 채워진/빈 스티커 혼합
+- 카페 상세 — 방문 기록이 있으면 실사진+별점+노트, 없으면 placeholder + "방문 기록 남기기"
+- **방문 기록 흐름** (`/visit/new`): 사진(카메라/갤러리) → 카페 선택 → 메뉴 → 별점 → vibe 다중선택 → 노트 → 저장
+- `visits` 스토어 — zustand + AsyncStorage 영속, 회전·gradient·번호 스탬프 자동 부여
 
 **범위 밖 (다음 세션)**
-- 카메라 / 위치 / 카페 자동 매칭 (Google Places)
-- AI 누끼 / 카드 자동 생성
-- 인스타 공유
-- 결제 / 지도 / 사용자 카페 추가 UI
-- vibe 필터 / sub 컬렉션 (빵지순례, 케이크 도감)
+- GPS + Google Places 자동 매칭 (Places API 키 필요)
+- Claude Vision으로 누끼 + 카드 자동 생성 (Anthropic 키 필요)
+- Supabase 실연결 / 다중 디바이스 동기화
+- 인스타 공유 / 결제 / 사용자 카페 추가 / sub 컬렉션 (빵지순례, 케이크 도감) / vibe 필터
 
 ---
 

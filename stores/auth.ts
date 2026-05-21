@@ -1,4 +1,6 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
+import { createJSONStorage, persist } from 'zustand/middleware';
 
 export type User = {
   id: string;
@@ -9,11 +11,9 @@ export type User = {
 
 type AuthState = {
   user: User | null;
-  isHydrated: boolean;
   signIn: (email: string, _password: string) => Promise<void>;
   signUp: (email: string, _password: string, displayName: string) => Promise<void>;
   signOut: () => Promise<void>;
-  setHydrated: (v: boolean) => void;
 };
 
 function makeMemberNumber(): string {
@@ -21,31 +21,37 @@ function makeMemberNumber(): string {
   return `No ${n}`;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
-  isHydrated: true,
-  signIn: async (email) => {
-    set({
-      user: {
-        id: 'local-user',
-        email,
-        displayName: email.split('@')[0] || '게스트',
-        memberNumber: makeMemberNumber(),
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
+      user: null,
+      signIn: async (email) => {
+        set({
+          user: {
+            id: 'local-user',
+            email,
+            displayName: email.split('@')[0] || '게스트',
+            memberNumber: makeMemberNumber(),
+          },
+        });
       },
-    });
-  },
-  signUp: async (email, _password, displayName) => {
-    set({
-      user: {
-        id: 'local-user',
-        email,
-        displayName: displayName || email.split('@')[0] || '게스트',
-        memberNumber: makeMemberNumber(),
+      signUp: async (email, _password, displayName) => {
+        set({
+          user: {
+            id: 'local-user',
+            email,
+            displayName: displayName || email.split('@')[0] || '게스트',
+            memberNumber: makeMemberNumber(),
+          },
+        });
       },
-    });
-  },
-  signOut: async () => {
-    set({ user: null });
-  },
-  setHydrated: (v) => set({ isHydrated: v }),
-}));
+      signOut: async () => {
+        set({ user: null });
+      },
+    }),
+    {
+      name: 'trove-cafe-auth',
+      storage: createJSONStorage(() => AsyncStorage),
+    },
+  ),
+);

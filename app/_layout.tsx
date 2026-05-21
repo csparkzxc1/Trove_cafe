@@ -49,6 +49,10 @@ export default function RootLayout() {
                 name="cafe/[id]"
                 options={{ animation: 'slide_from_bottom' }}
               />
+              <Stack.Screen
+                name="visit/new"
+                options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
+              />
             </Stack>
           </View>
         </QueryClientProvider>
