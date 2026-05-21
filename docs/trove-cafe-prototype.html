@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trove Cafe — Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=Fraunces:ital,wght@0,300;0,400;0,500;0,600;1,400;1,500&family=Quicksand:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --latte: #FBF6EC;
+    --latte-2: #F2E9D6;
+    --cream: #FFFCF5;
+    --mocha: #5C4434;
+    --mocha-2: #7A5C45;
+    --mocha-3: #3D2818;
+    --honey: #E6B450;
+    --honey-light: #F4D58A;
+    --dusty: #E8B5A8;
+    --sage: #A8B89C;
+    --butter: #F4D58A;
+    --cocoa: #7A5C45;
+    --paper-line: rgba(92, 68, 52, 0.14);
+    --sticker-shadow: 0 6px 16px rgba(92, 68, 52, 0.18), 0 2px 4px rgba(92, 68, 52, 0.12);
+    --polaroid-shadow: 0 8px 20px rgba(92, 68, 52, 0.16), 0 3px 6px rgba(92, 68, 52, 0.1);
+
+    --display: 'Fraunces', 'Pretendard', serif;
+    --handwrite: 'Caveat', cursive;
+    --displayKr: 'Pretendard', sans-serif;
+    --sansEn: 'Quicksand', 'Pretendard', sans-serif;
+    --mono: 'Space Mono', monospace;
+  }
+
+  body {
+    font-family: var(--displayKr);
+    background: var(--latte);
+    color: var(--mocha-3);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(circle at 20% 20%, rgba(230, 180, 80, 0.06) 0%, transparent 50%),
+      radial-gradient(circle at 80% 60%, rgba(232, 181, 168, 0.05) 0%, transparent 50%),
+      radial-gradient(circle at 40% 90%, rgba(168, 184, 156, 0.04) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3CfeColorMatrix values='0 0 0 0 0.36 0 0 0 0 0.27 0 0 0 0 0.20 0 0 0 0.06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 2;
+    mix-blend-mode: multiply;
+  }
+
+  .frame {
+    position: relative;
+    z-index: 3;
+    max-width: 460px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+
+  .hdr { padding: 40px 4px 24px; display: flex; justify-content: space-between; align-items: flex-end; }
+  .brand { display: flex; align-items: baseline; gap: 4px; }
+  .brand .trove { font-family: var(--display); font-weight: 500; font-size: 26px; letter-spacing: 0.18em; color: var(--mocha); }
+  .brand .cafe { font-family: var(--handwrite); font-weight: 700; font-size: 38px; color: var(--honey); line-height: 0.8; transform: rotate(-3deg) translateY(2px); margin-left: 2px; }
+  .acct { font-family: var(--mono); font-size: 9px; letter-spacing: 0.15em; color: var(--mocha-2); text-transform: uppercase; text-align: right; }
+  .acct .row { display: block; opacity: 0.7; }
+
+  .intro { padding: 24px 0 32px; text-align: center; position: relative; }
+  .intro .badge { display: inline-block; font-family: var(--mono); font-size: 9px; letter-spacing: 0.3em; color: var(--honey); text-transform: uppercase; padding: 6px 14px; border: 1px solid var(--honey); border-radius: 999px; margin-bottom: 22px; }
+  .intro h1 { font-family: var(--displayKr); font-weight: 800; font-size: 30px; line-height: 1.35; color: var(--mocha-3); letter-spacing: -0.02em; margin-bottom: 14px; }
+  .intro h1 em { font-family: var(--handwrite); font-style: normal; font-weight: 700; font-size: 38px; color: var(--honey); margin: 0 2px; }
+  .intro .sub { font-family: var(--handwrite); font-weight: 500; font-size: 20px; color: var(--mocha-2); transform: rotate(-1deg); display: inline-block; }
+
+  .diary { background: var(--cream); border-radius: 16px; padding: 24px 22px; margin-bottom: 36px; box-shadow: var(--polaroid-shadow); position: relative; transform: rotate(-0.5deg); }
+  .diary::before { content: ''; position: absolute; top: -10px; left: 24px; width: 60px; height: 18px; background: var(--sage); opacity: 0.7; transform: rotate(-4deg); border-radius: 1px; }
+  .diary::after { content: ''; position: absolute; top: -8px; right: 28px; width: 50px; height: 16px; background: var(--dusty); opacity: 0.65; transform: rotate(3deg); border-radius: 1px; }
+  .diary .label-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+  .diary .lbl { font-family: var(--mono); font-size: 9px; letter-spacing: 0.25em; color: var(--mocha-2); text-transform: uppercase; }
+  .diary .date-stamp { font-family: var(--mono); font-size: 10px; color: var(--honey); letter-spacing: 0.1em; }
+  .diary .main { font-family: var(--displayKr); font-weight: 800; font-size: 32px; color: var(--mocha-3); letter-spacing: -0.02em; line-height: 1.1; }
+  .diary .main em { font-family: var(--handwrite); font-style: normal; font-weight: 700; font-size: 42px; color: var(--honey); }
+  .diary .caption { font-family: var(--handwrite); font-weight: 500; font-size: 18px; color: var(--mocha-2); margin-top: 8px; transform: rotate(-0.8deg); display: inline-block; }
+  .diary .stats { display: flex; gap: 14px; margin-top: 16px; padding-top: 14px; border-top: 1px dashed var(--paper-line); }
+  .diary .stat { flex: 1; }
+  .diary .stat .v { font-family: var(--mono); font-size: 15px; font-weight: 700; color: var(--mocha); letter-spacing: 0.04em; }
+  .diary .stat .k { font-family: var(--mono); font-size: 8px; letter-spacing: 0.2em; color: var(--mocha-2); text-transform: uppercase; margin-top: 2px; }
+
+  .section-lbl { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 20px; padding-left: 4px; }
+  .section-lbl .title { font-family: var(--displayKr); font-weight: 700; font-size: 18px; color: var(--mocha-3); }
+  .section-lbl .title em { font-family: var(--handwrite); font-style: normal; font-weight: 600; font-size: 22px; color: var(--honey); margin-left: 6px; }
+  .section-lbl .right { font-family: var(--mono); font-size: 9px; color: var(--mocha-2); letter-spacing: 0.15em; text-transform: uppercase; }
+
+  .book { display: grid; grid-template-columns: 1fr 1fr; gap: 24px 18px; padding: 8px 0 12px; margin-bottom: 48px; }
+  .sticker { background: var(--cream); border-radius: 8px; padding: 10px 10px 14px; box-shadow: var(--sticker-shadow); position: relative; cursor: pointer; transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
+  .sticker:nth-child(1) { transform: rotate(-2.5deg); }
+  .sticker:nth-child(2) { transform: rotate(1.5deg); margin-top: 12px; }
+  .sticker:nth-child(3) { transform: rotate(2deg); }
+  .sticker:nth-child(4) { transform: rotate(-1.5deg); margin-top: 8px; }
+  .sticker:nth-child(5) { transform: rotate(-1deg); }
+  .sticker:nth-child(6) { transform: rotate(2.5deg); margin-top: 10px; }
+  .sticker:hover { transform: rotate(0) translateY(-4px); }
+  .sticker .img { width: 100%; aspect-ratio: 1 / 1; background: linear-gradient(135deg, var(--latte-2) 0%, var(--cream) 100%); border-radius: 6px; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; }
+  .sticker .img.pink { background: linear-gradient(135deg, var(--dusty) 0%, #F5D2C9 100%); }
+  .sticker .img.sage { background: linear-gradient(135deg, var(--sage) 0%, #C2CFB7 100%); }
+  .sticker .img.honey { background: linear-gradient(135deg, var(--honey-light) 0%, #FAE5B5 100%); }
+  .sticker .img.mocha { background: linear-gradient(135deg, #C4A78B 0%, #DEC6AB 100%); }
+  .sticker .img svg { width: 56%; height: 56%; opacity: 0.85; }
+  .sticker .img .star { position: absolute; top: 8px; right: 8px; width: 14px; height: 14px; opacity: 0.7; }
+  .sticker .name-ko { font-family: var(--displayKr); font-weight: 700; font-size: 15px; color: var(--mocha-3); letter-spacing: -0.01em; line-height: 1.2; margin-bottom: 4px; }
+  .sticker .meta { font-family: var(--mono); font-size: 8px; color: var(--mocha-2); letter-spacing: 0.15em; text-transform: uppercase; }
+  .sticker .note { font-family: var(--handwrite); font-size: 14px; color: var(--honey); margin-top: 6px; line-height: 1; transform: rotate(-1deg); display: inline-block; }
+  .sticker .num-stamp { position: absolute; top: 6px; left: 6px; font-family: var(--mono); font-size: 8px; color: var(--mocha-2); background: var(--cream); padding: 2px 6px; border-radius: 999px; letter-spacing: 0.1em; border: 1px solid var(--paper-line); z-index: 2; }
+
+  .sticker.empty { background: transparent; box-shadow: none; border: 1.5px dashed rgba(92, 68, 52, 0.25); padding: 18px 10px; }
+  .sticker.empty:hover { transform: rotate(0) translateY(-2px); }
+  .sticker.empty .img { background: rgba(92, 68, 52, 0.04); border-radius: 6px; }
+  .sticker.empty .img svg { opacity: 0.25; }
+  .sticker.empty .name-ko { color: var(--mocha-2); font-weight: 600; }
+  .sticker.empty .meta { color: var(--mocha-2); opacity: 0.6; }
+  .sticker.empty .note { color: var(--mocha-2); opacity: 0.6; font-size: 13px; }
+
+  .featured-wrap { margin: 56px 0 36px; position: relative; }
+  .featured-label { text-align: center; margin-bottom: 20px; }
+  .featured-label .handwrite { font-family: var(--handwrite); font-size: 22px; font-weight: 600; color: var(--honey); transform: rotate(-1.5deg); display: inline-block; }
+  .featured-label .mono { display: block; font-family: var(--mono); font-size: 9px; letter-spacing: 0.3em; color: var(--mocha-2); margin-top: 4px; text-transform: uppercase; }
+
+  .polaroid { background: var(--cream); padding: 16px 16px 22px; border-radius: 4px; box-shadow: var(--polaroid-shadow); transform: rotate(-2deg); margin: 0 auto; max-width: 320px; position: relative; }
+  .polaroid::before { content: ''; position: absolute; top: -14px; left: 50%; transform: translateX(-50%) rotate(-3deg); width: 80px; height: 22px; background: var(--sage); opacity: 0.65; border-radius: 2px; box-shadow: 0 2px 4px rgba(92, 68, 52, 0.1); }
+  .polaroid .photo { width: 100%; aspect-ratio: 1 / 1; background: linear-gradient(135deg, var(--dusty) 0%, #F5D2C9 50%, var(--honey-light) 100%); border-radius: 2px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; position: relative; overflow: hidden; }
+  .polaroid .photo svg.drink { width: 60%; height: 60%; filter: drop-shadow(0 4px 8px rgba(92, 68, 52, 0.2)); }
+  .polaroid .photo .stars { position: absolute; bottom: 16px; right: 16px; display: flex; gap: 2px; }
+  .polaroid .photo .stars svg { width: 14px; height: 14px; fill: var(--cream); opacity: 0.95; }
+  .polaroid .photo .stars svg.empty { opacity: 0.4; }
+  .polaroid .caption { text-align: center; }
+  .polaroid .name { font-family: var(--displayKr); font-weight: 800; font-size: 22px; color: var(--mocha-3); letter-spacing: -0.01em; margin-bottom: 4px; }
+  .polaroid .location { font-family: var(--mono); font-size: 10px; color: var(--mocha-2); letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 10px; }
+  .polaroid .order { font-family: var(--handwrite); font-size: 19px; font-weight: 500; color: var(--honey); line-height: 1.1; transform: rotate(-1deg); display: inline-block; }
+  .polaroid .divider { width: 30px; height: 1px; background: var(--paper-line); margin: 10px auto; }
+  .polaroid .date-line { font-family: var(--mono); font-size: 9px; color: var(--mocha-2); letter-spacing: 0.15em; }
+
+  .vibes { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 24px; padding: 0 12px; }
+  .chip { font-family: var(--displayKr); font-weight: 600; font-size: 12px; padding: 8px 16px; border-radius: 999px; color: var(--mocha-3); background: var(--cream); box-shadow: 0 2px 6px rgba(92, 68, 52, 0.1); }
+  .chip.dusty { background: var(--dusty); color: var(--mocha-3); }
+  .chip.sage { background: var(--sage); color: var(--mocha-3); }
+  .chip.honey { background: var(--honey-light); color: var(--mocha-3); }
+  .chip.cream { background: var(--cream); color: var(--mocha); border: 1px solid var(--paper-line); }
+
+  .manifesto { padding: 56px 12px 36px; margin-top: 24px; border-top: 1px dashed var(--paper-line); text-align: center; }
+  .manifesto .q-en { font-family: var(--display); font-style: italic; font-weight: 400; font-size: 20px; line-height: 1.5; color: var(--mocha); margin-bottom: 14px; }
+  .manifesto .q-kr { font-family: var(--displayKr); font-weight: 500; font-size: 15px; line-height: 1.7; color: var(--mocha-2); letter-spacing: -0.01em; }
+  .manifesto .q-kr em { font-family: var(--handwrite); font-style: normal; font-weight: 600; font-size: 21px; color: var(--honey); }
+
+  .ftr { padding: 40px 0 56px; text-align: center; }
+  .ftr .palette { display: flex; justify-content: center; gap: 8px; margin-bottom: 22px; }
+  .ftr .sw { width: 18px; height: 18px; border-radius: 50%; box-shadow: 0 2px 4px rgba(92, 68, 52, 0.15); }
+  .ftr .sw:nth-child(1) { background: var(--latte); border: 1px solid var(--paper-line); }
+  .ftr .sw:nth-child(2) { background: var(--mocha); }
+  .ftr .sw:nth-child(3) { background: var(--honey); }
+  .ftr .sw:nth-child(4) { background: var(--dusty); }
+  .ftr .sw:nth-child(5) { background: var(--sage); }
+  .ftr .sw:nth-child(6) { background: var(--butter); }
+  .ftr .crest { font-family: var(--display); font-size: 11px; letter-spacing: 0.4em; color: var(--mocha-2); text-transform: uppercase; }
+  .ftr .crest em { font-family: var(--handwrite); font-style: normal; font-weight: 600; font-size: 16px; color: var(--honey); letter-spacing: 0; margin-left: 4px; }
+  .ftr .est { font-family: var(--mono); font-size: 9px; letter-spacing: 0.2em; color: var(--mocha-2); margin-top: 6px; opacity: 0.7; }
+
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(16px) rotate(var(--r, 0deg)); }
+    to { opacity: 1; transform: translateY(0) rotate(var(--r, 0deg)); }
+  }
+  .intro .badge, .intro h1, .intro .sub { animation: fade-up 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
+  .intro .badge { animation-delay: 0.1s; }
+  .intro h1 { animation-delay: 0.25s; }
+  .intro .sub { animation-delay: 0.45s; }
+
+  .sticker { animation: fade-up 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
+  .sticker:nth-child(1) { --r: -2.5deg; animation-delay: 0.1s; }
+  .sticker:nth-child(2) { --r: 1.5deg; animation-delay: 0.18s; }
+  .sticker:nth-child(3) { --r: 2deg; animation-delay: 0.26s; }
+  .sticker:nth-child(4) { --r: -1.5deg; animation-delay: 0.34s; }
+  .sticker:nth-child(5) { --r: -1deg; animation-delay: 0.42s; }
+  .sticker:nth-child(6) { --r: 2.5deg; animation-delay: 0.5s; }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="ic-cup" viewBox="0 0 64 64">
+      <path d="M14 22 L14 44 Q14 54 24 54 L38 54 Q48 54 48 44 L48 22 Z" fill="none" stroke="#5C4434" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M48 26 Q56 26 56 34 Q56 42 48 42" fill="none" stroke="#5C4434" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M22 16 Q22 12 24 10 M30 16 Q30 12 32 10 M38 16 Q38 12 40 10" fill="none" stroke="#5C4434" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+    </symbol>
+    <symbol id="ic-latte" viewBox="0 0 64 64">
+      <path d="M12 18 L12 46 Q12 56 22 56 L42 56 Q52 56 52 46 L52 18 Z" fill="#FBF6EC" stroke="#5C4434" stroke-width="2.5"/>
+      <ellipse cx="32" cy="20" rx="20" ry="4" fill="#FBF6EC" stroke="#5C4434" stroke-width="2"/>
+      <path d="M22 20 Q28 14 32 20 Q36 14 42 20" fill="none" stroke="#5C4434" stroke-width="1.5" opacity="0.5"/>
+      <path d="M52 24 Q60 24 60 32 Q60 40 52 40" fill="none" stroke="#5C4434" stroke-width="2.5" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="ic-cross" viewBox="0 0 64 64">
+      <path d="M10 38 Q10 22 26 18 Q42 14 54 28 Q58 34 54 40 Q42 50 26 46 Q14 44 10 38 Z" fill="none" stroke="#5C4434" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M20 28 L20 38 M28 24 L28 42 M36 24 L36 42 M44 28 L44 38" stroke="#5C4434" stroke-width="1.5" opacity="0.5" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="ic-cake" viewBox="0 0 64 64">
+      <path d="M14 50 L32 14 L50 50 Z" fill="none" stroke="#5C4434" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M20 38 L44 38" stroke="#5C4434" stroke-width="2" stroke-linecap="round"/>
+      <path d="M24 28 L40 28" stroke="#5C4434" stroke-width="1.5" stroke-linecap="round" opacity="0.7"/>
+      <circle cx="32" cy="20" r="2.5" fill="#5C4434"/>
+    </symbol>
+    <symbol id="ic-donut" viewBox="0 0 64 64">
+      <circle cx="32" cy="32" r="20" fill="none" stroke="#5C4434" stroke-width="2.5"/>
+      <circle cx="32" cy="32" r="7" fill="none" stroke="#5C4434" stroke-width="2.5"/>
+      <path d="M18 24 Q22 20 24 22 M40 18 Q44 16 46 20 M48 38 Q52 40 50 44 M16 42 Q14 38 18 36" stroke="#5C4434" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+    </symbol>
+    <symbol id="ic-bagel" viewBox="0 0 64 64">
+      <circle cx="32" cy="32" r="22" fill="none" stroke="#5C4434" stroke-width="2.5"/>
+      <circle cx="32" cy="32" r="9" fill="none" stroke="#5C4434" stroke-width="2.5"/>
+      <circle cx="22" cy="22" r="1" fill="#5C4434" opacity="0.7"/>
+      <circle cx="42" cy="20" r="1" fill="#5C4434" opacity="0.7"/>
+      <circle cx="46" cy="38" r="1" fill="#5C4434" opacity="0.7"/>
+      <circle cx="18" cy="40" r="1" fill="#5C4434" opacity="0.7"/>
+      <circle cx="32" cy="14" r="1" fill="#5C4434" opacity="0.7"/>
+      <circle cx="32" cy="52" r="1" fill="#5C4434" opacity="0.7"/>
+    </symbol>
+    <symbol id="ic-star" viewBox="0 0 16 16">
+      <path d="M8 1 L10 6 L15 6 L11 9.5 L13 14.5 L8 11.5 L3 14.5 L5 9.5 L1 6 L6 6 Z" fill="#5C4434"/>
+    </symbol>
+    <symbol id="ic-empty" viewBox="0 0 64 64">
+      <circle cx="32" cy="32" r="22" fill="none" stroke="#5C4434" stroke-width="2" stroke-dasharray="3 3"/>
+    </symbol>
+    <symbol id="ic-feature" viewBox="0 0 100 100">
+      <ellipse cx="50" cy="30" rx="34" ry="8" fill="#FFFCF5" stroke="#5C4434" stroke-width="1.5"/>
+      <path d="M16 30 L20 78 Q20 88 32 88 L68 88 Q80 88 80 78 L84 30" fill="#FFFCF5" stroke="#5C4434" stroke-width="1.8"/>
+      <path d="M30 30 Q40 22 50 30 Q60 22 70 30" fill="none" stroke="#5C4434" stroke-width="1.2" opacity="0.6"/>
+      <path d="M84 36 Q94 36 94 50 Q94 64 84 64" fill="none" stroke="#5C4434" stroke-width="1.8" stroke-linecap="round"/>
+      <path d="M40 50 L40 70 M50 48 L50 70 M60 50 L60 70" stroke="#5C4434" stroke-width="0.8" opacity="0.3"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="frame">
+  <header class="hdr">
+    <div class="brand">
+      <span class="trove">TROVE</span>
+      <span class="cafe">cafe</span>
+    </div>
+    <div class="acct">
+      <span class="row">EST. 2026</span>
+      <span class="row">PAGE No01</span>
+    </div>
+  </header>
+
+  <section class="intro">
+    <div class="badge">Cafe Diary . Seoul</div>
+    <h1>오늘 카페,<br><em>도감</em>에 붙이기.</h1>
+    <div class="sub">Stick the places you love.</div>
+  </section>
+
+  <section class="diary">
+    <div class="label-row">
+      <div class="lbl">My Sticker Book</div>
+      <div class="date-stamp">2026 . MAY</div>
+    </div>
+    <div class="main"><em>23</em>번째 페이지</div>
+    <div class="caption">조금씩 채워지는 중이에요</div>
+
+    <div class="stats">
+      <div class="stat"><div class="v">7</div><div class="k">동네</div></div>
+      <div class="stat"><div class="v">12</div><div class="k">시그니처</div></div>
+      <div class="stat"><div class="v">4.6</div><div class="k">평균</div></div>
+    </div>
+  </section>
+
+  <div class="section-lbl">
+    <div class="title">내 스티커북 <em>my collection</em></div>
+    <div class="right">23 . sticked</div>
+  </div>
+
+  <section class="book">
+    <div class="sticker">
+      <span class="num-stamp">No 023</span>
+      <div class="img pink">
+        <svg class="star"><use href="#ic-star"/></svg>
+        <svg><use href="#ic-cake"/></svg>
+      </div>
+      <div class="name-ko">오르에르</div>
+      <div class="meta">한남동 . 디저트</div>
+      <div class="note">~ 플랫화이트</div>
+    </div>
+
+    <div class="sticker">
+      <span class="num-stamp">No 022</span>
+      <div class="img mocha"><svg><use href="#ic-cup"/></svg></div>
+      <div class="name-ko">센터커피</div>
+      <div class="meta">성수동 . 스페셜티</div>
+      <div class="note">드립 정석</div>
+    </div>
+
+    <div class="sticker">
+      <span class="num-stamp">No 021</span>
+      <div class="img honey"><svg><use href="#ic-cross"/></svg></div>
+      <div class="name-ko">레이어드</div>
+      <div class="meta">연남동 . 베이커리</div>
+      <div class="note">스콘 진심</div>
+    </div>
+
+    <div class="sticker">
+      <span class="num-stamp">No 020</span>
+      <div class="img sage"><svg><use href="#ic-latte"/></svg></div>
+      <div class="name-ko">식물</div>
+      <div class="meta">익선동 . 한옥</div>
+      <div class="note">오미자에이드</div>
+    </div>
+
+    <div class="sticker empty">
+      <span class="num-stamp">No 024</span>
+      <div class="img"><svg><use href="#ic-empty"/></svg></div>
+      <div class="name-ko">망원동 티라미수</div>
+      <div class="meta">망원동</div>
+      <div class="note">다음 자리</div>
+    </div>
+
+    <div class="sticker empty">
+      <span class="num-stamp">No 025</span>
+      <div class="img"><svg><use href="#ic-empty"/></svg></div>
+      <div class="name-ko">런던 베이글 뮤지엄</div>
+      <div class="meta">안국동</div>
+      <div class="note">곧 가보기</div>
+    </div>
+  </section>
+
+  <div class="featured-wrap">
+    <div class="featured-label">
+      <div class="handwrite">방금 붙인 스티커</div>
+      <div class="mono">latest entry</div>
+    </div>
+
+    <div class="polaroid">
+      <div class="photo">
+        <svg class="drink"><use href="#ic-feature"/></svg>
+        <div class="stars">
+          <svg><use href="#ic-star"/></svg>
+          <svg><use href="#ic-star"/></svg>
+          <svg><use href="#ic-star"/></svg>
+          <svg><use href="#ic-star"/></svg>
+          <svg class="empty"><use href="#ic-star"/></svg>
+        </div>
+      </div>
+      <div class="caption">
+        <div class="name">오르에르</div>
+        <div class="location">한남동 . 디저트</div>
+        <div class="order">플랫화이트 + 크로플</div>
+        <div class="divider"></div>
+        <div class="date-line">2026.05.21 . WED . 14:32</div>
+      </div>
+    </div>
+
+    <div class="vibes">
+      <div class="chip dusty">감성적인</div>
+      <div class="chip sage">조용한</div>
+      <div class="chip honey">데이트</div>
+      <div class="chip cream">디저트 맛집</div>
+    </div>
+  </div>
+
+  <section class="manifesto">
+    <div class="q-en">"Some places<br>deserve more than a check-in."</div>
+    <div class="q-kr">어떤 카페는, 체크인보다<br><em>스티커 한 장</em>이 어울려요.</div>
+  </section>
+
+  <footer class="ftr">
+    <div class="palette">
+      <div class="sw"></div><div class="sw"></div><div class="sw"></div>
+      <div class="sw"></div><div class="sw"></div><div class="sw"></div>
+    </div>
+    <div class="crest">TROVE . INC.<em>cafe</em></div>
+    <div class="est">PROTOTYPE . 2026.05.21</div>
+  </footer>
+</div>
+
+</body>
+</html>
