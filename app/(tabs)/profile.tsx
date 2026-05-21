@@ -1,8 +1,10 @@
+import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { DrinkIcon, StarIcon } from '@/components/icons';
 import { BrandWordmark } from '@/components/BrandWordmark';
 import { MaskingTape } from '@/components/ui/MaskingTape';
 import { PaperCard } from '@/components/ui/PaperCard';
@@ -10,7 +12,8 @@ import { Text } from '@/components/ui/Text';
 import { colors } from '@/constants/theme';
 import { useAllCafes } from '@/lib/cafes';
 import { useAuthStore } from '@/stores/auth';
-import { useVisitsStore } from '@/stores/visits';
+import { useVisitsStore, type Visit } from '@/stores/visits';
+import type { AppCafe } from '@/lib/cafes';
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
@@ -118,6 +121,66 @@ export default function ProfileScreen() {
         </PaperCard>
       </View>
 
+      <View style={{ marginTop: 32 }}>
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'baseline',
+            marginBottom: 12,
+          }}
+        >
+          <Text variant="titleKr" size={16} color={colors.mochaDark}>
+            지난 방문
+          </Text>
+          <Text
+            variant="mono"
+            size={9}
+            letterSpacing={1.5}
+            uppercase
+            color={colors.mochaLight}
+          >
+            recent visits
+          </Text>
+        </View>
+        {visits.length === 0 ? (
+          <View
+            style={{
+              paddingVertical: 28,
+              alignItems: 'center',
+              borderRadius: 14,
+              borderWidth: 1.5,
+              borderColor: colors.paperLineStrong,
+              borderStyle: 'dashed',
+            }}
+          >
+            <Text
+              variant="handwriteReg"
+              size={18}
+              color={colors.mochaLight}
+              style={{ transform: [{ rotate: '-1deg' }] }}
+            >
+              아직 붙인 스티커가 없어요
+            </Text>
+          </View>
+        ) : (
+          <View style={{ gap: 10 }}>
+            {visits.slice(0, 6).map((v) => {
+              const cafe = allCafes.find((c) => c.id === v.cafeId);
+              if (!cafe) return null;
+              return (
+                <VisitRow
+                  key={v.id}
+                  visit={v}
+                  cafe={cafe}
+                  onPress={() => router.push(`/cafe/${cafe.id}`)}
+                />
+              );
+            })}
+          </View>
+        )}
+      </View>
+
       <Pressable
         onPress={handleSignOut}
         style={({ pressed }) => ({
@@ -142,6 +205,90 @@ export default function ProfileScreen() {
         </Text>
       </View>
     </ScrollView>
+  );
+}
+
+function VisitRow({
+  visit,
+  cafe,
+  onPress,
+}: {
+  visit: Visit;
+  cafe: AppCafe;
+  onPress: () => void;
+}) {
+  const d = new Date(visit.visitedAt);
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => ({
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 14,
+        padding: 12,
+        borderRadius: 14,
+        backgroundColor: colors.cream,
+        borderWidth: 1,
+        borderColor: colors.paperLine,
+        opacity: pressed ? 0.85 : 1,
+      })}
+    >
+      <View
+        style={{
+          width: 56,
+          height: 56,
+          borderRadius: 8,
+          overflow: 'hidden',
+          backgroundColor: colors.latteDark,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        {visit.photoUri ? (
+          <Image source={{ uri: visit.photoUri }} style={{ width: '100%', height: '100%' }} contentFit="cover" />
+        ) : (
+          <DrinkIcon iconKey={cafe.icon} size={32} color={colors.mocha} />
+        )}
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text variant="titleKr" size={15} color={colors.mochaDark} numberOfLines={1}>
+          {cafe.name}
+        </Text>
+        <Text
+          variant="mono"
+          size={8}
+          letterSpacing={1.4}
+          uppercase
+          color={colors.mochaLight}
+          style={{ marginTop: 2 }}
+        >
+          {cafe.district} · {mm}.{dd}
+        </Text>
+        {visit.orderedMenu ? (
+          <Text
+            variant="handwriteReg"
+            size={15}
+            color={colors.honey}
+            style={{ marginTop: 2, transform: [{ rotate: '-1deg' }] }}
+            numberOfLines={1}
+          >
+            {visit.orderedMenu}
+          </Text>
+        ) : null}
+      </View>
+      <View style={{ flexDirection: 'row', gap: 2 }}>
+        {[1, 2, 3, 4, 5].map((n) => (
+          <StarIcon
+            key={n}
+            size={9}
+            color={n <= visit.rating ? colors.honey : colors.paperLineStrong}
+            filled={n <= visit.rating}
+          />
+        ))}
+      </View>
+    </Pressable>
   );
 }
 

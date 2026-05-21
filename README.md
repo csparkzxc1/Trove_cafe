@@ -208,20 +208,23 @@ create policy "auth users add cafes" on cafes for insert
 **완료**
 - Expo Router + NativeWind v4 + 폰트 5종 세팅
 - 디자인 토큰 (TS / Tailwind 동기)
-- 재사용 컴포넌트 `Text` (variant 11종), `Chip`, `PaperCard`, `MaskingTape`, `IntroBadge`, `BrandWordmark`, `BrandFooter`, `StarRating`, `PhotoPicker`
+- 재사용 컴포넌트: `Text` (variant 11종), `Chip`, `PaperCard`, `MaskingTape`, `IntroBadge`, `BrandWordmark`, `BrandFooter`, `StarRating`, `PhotoPicker`, `FilterStrip`
 - 음료 SVG 6종 + `StarIcon`, `EmptyDishIcon`, `FeatureDrinkIcon`
-- `StickerCard` (visited/empty, 사진 썸네일 지원), `StickerGrid`, `DiaryStatBlock`, `PolaroidCard` (사진/별점 렌더링)
+- `StickerCard` (visited/empty, 사진 썸네일 지원), `StickerGrid` (per-item 회전·gradient 오버라이드), `DiaryStatBlock`, `PolaroidCard` (사진/별점 렌더링)
 - Auth 분기 (zustand persist), login / signup 화면
-- 도감 메인 — 통계 라이브 반영, "방금 붙인 스티커" 폴라로이드, 채워진/빈 스티커 혼합
-- 카페 상세 — 방문 기록이 있으면 실사진+별점+노트, 없으면 placeholder + "방문 기록 남기기"
-- **방문 기록 흐름** (`/visit/new`): 사진(카메라/갤러리) → 카페 선택 → 메뉴 → 별점 → vibe 다중선택 → 노트 → 저장
-- `visits` 스토어 — zustand + AsyncStorage 영속, 회전·gradient·번호 스탬프 자동 부여
+- **도감 메인**: 통계 라이브 반영, "방금 붙인 스티커" 폴라로이드, 채워진/빈 스티커 혼합, **동네/visited 필터**
+- **카페 상세**: 방문 기록이 있으면 실사진+별점+노트+vibe + "스티커 다시 붙이기"(편집) + "떼어내기"; 없으면 placeholder + "방문 기록 남기기"; user-added 카페는 도감에서 삭제 가능
+- **방문 기록 흐름** (`/visit/new`): 사진(카메라/갤러리) → 카페 선택 → 메뉴 → 별점 → vibe 다중선택 → 노트 → 저장 (`?cafe=` prefill, `?visit=` 편집 모드)
+- **사용자 카페 추가** (`/cafe/new`): 이름·동네·시그니처·카테고리·아이콘으로 새 카페를 도감에 등록, 등록 직후 visit/new로 이어짐
+- **프로필**: 멤버 카드, 라이브 통계, **지난 방문 리스트** (썸네일 + 별점 + 메뉴)
+- 스토어 3종: `auth`, `visits`, `cafes` 모두 zustand + AsyncStorage 영속
 
 **범위 밖 (다음 세션)**
 - GPS + Google Places 자동 매칭 (Places API 키 필요)
 - Claude Vision으로 누끼 + 카드 자동 생성 (Anthropic 키 필요)
-- Supabase 실연결 / 다중 디바이스 동기화
-- 인스타 공유 / 결제 / 사용자 카페 추가 / sub 컬렉션 (빵지순례, 케이크 도감) / vibe 필터
+- Supabase 실연결 / 다중 디바이스 동기화 (URL/anon key 필요)
+- 폴라로이드 캡처 후 인스타 공유 (react-native-view-shot 도입 / dev build 필요)
+- 결제 / sub 컬렉션 (빵지순례, 케이크 도감)
 
 ---
 
