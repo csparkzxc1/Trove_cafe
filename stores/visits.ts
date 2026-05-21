@@ -24,6 +24,7 @@ type NewVisitInput = Omit<Visit, 'id' | 'rotationDeg' | 'imageBg' | 'visitedAt'>
 type VisitsState = {
   visits: Visit[];
   addVisit: (input: NewVisitInput) => Visit;
+  updateVisit: (id: string, patch: Partial<NewVisitInput>) => void;
   removeVisit: (id: string) => void;
   reset: () => void;
 };
@@ -63,6 +64,18 @@ export const useVisitsStore = create<VisitsState>()(
         set((s) => ({ visits: [visit, ...s.visits] }));
         return visit;
       },
+      updateVisit: (id, patch) =>
+        set((s) => ({
+          visits: s.visits.map((v) =>
+            v.id === id
+              ? {
+                  ...v,
+                  ...patch,
+                  visitedAt: patch.visitedAt ?? v.visitedAt,
+                }
+              : v,
+          ),
+        })),
       removeVisit: (id) =>
         set((s) => ({ visits: s.visits.filter((v) => v.id !== id) })),
       reset: () => set({ visits: [] }),
@@ -80,4 +93,8 @@ export function useLatestVisit(): Visit | undefined {
 
 export function useVisitForCafe(cafeId: string): Visit | undefined {
   return useVisitsStore((s) => s.visits.find((v) => v.cafeId === cafeId));
+}
+
+export function useVisitById(id: string | undefined): Visit | undefined {
+  return useVisitsStore((s) => (id ? s.visits.find((v) => v.id === id) : undefined));
 }

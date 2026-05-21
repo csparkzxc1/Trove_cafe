@@ -50,6 +50,10 @@ export default function RootLayout() {
                 options={{ animation: 'slide_from_bottom' }}
               />
               <Stack.Screen
+                name="cafe/new"
+                options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
+              />
+              <Stack.Screen
                 name="visit/new"
                 options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
               />

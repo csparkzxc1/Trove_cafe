@@ -7,8 +7,8 @@ import { BrandWordmark } from '@/components/BrandWordmark';
 import { MaskingTape } from '@/components/ui/MaskingTape';
 import { PaperCard } from '@/components/ui/PaperCard';
 import { Text } from '@/components/ui/Text';
-import { findCafe } from '@/constants/cafes-seed';
 import { colors } from '@/constants/theme';
+import { useAllCafes } from '@/lib/cafes';
 import { useAuthStore } from '@/stores/auth';
 import { useVisitsStore } from '@/stores/visits';
 
@@ -18,10 +18,12 @@ export default function ProfileScreen() {
   const user = useAuthStore((s) => s.user);
   const signOut = useAuthStore((s) => s.signOut);
   const visits = useVisitsStore((s) => s.visits);
+  const allCafes = useAllCafes();
 
   const stats = useMemo(() => {
+    const cafeById = new Map(allCafes.map((c) => [c.id, c] as const));
     const districts = new Set(
-      visits.map((v) => findCafe(v.cafeId)?.district).filter(Boolean),
+      visits.map((v) => cafeById.get(v.cafeId)?.district).filter(Boolean),
     );
     const avg =
       visits.length === 0
@@ -32,7 +34,7 @@ export default function ProfileScreen() {
       districts: districts.size,
       avg,
     };
-  }, [visits]);
+  }, [visits, allCafes]);
 
   async function handleSignOut() {
     await signOut();

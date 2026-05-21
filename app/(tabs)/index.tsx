@@ -11,8 +11,8 @@ import { PolaroidCard } from '@/components/PolaroidCard';
 import { StickerGrid, type StickerItem } from '@/components/StickerGrid';
 import { IntroBadge } from '@/components/ui/IntroBadge';
 import { Text } from '@/components/ui/Text';
-import { CAFES_SEED, findCafe } from '@/constants/cafes-seed';
 import { colors } from '@/constants/theme';
+import { useAllCafes } from '@/lib/cafes';
 import { useAuthStore } from '@/stores/auth';
 import { useVisitsStore, type Visit } from '@/stores/visits';
 
@@ -39,6 +39,13 @@ export default function CollectionScreen() {
   const insets = useSafeAreaInsets();
   const user = useAuthStore((s) => s.user);
   const visits = useVisitsStore((s) => s.visits);
+  const allCafes = useAllCafes();
+
+  const cafeById = useMemo(() => {
+    const map = new Map<string, (typeof allCafes)[number]>();
+    for (const c of allCafes) map.set(c.id, c);
+    return map;
+  }, [allCafes]);
 
   const visitByCafe = useMemo(() => {
     const map = new Map<string, Visit>();
@@ -50,7 +57,7 @@ export default function CollectionScreen() {
 
   const items: StickerItem[] = useMemo(
     () =>
-      CAFES_SEED.map((c) => {
+      allCafes.map((c) => {
         const v = visitByCafe.get(c.id);
         return {
           id: c.id,
@@ -65,15 +72,15 @@ export default function CollectionScreen() {
           onPress: () => router.push(`/cafe/${c.id}`),
         };
       }),
-    [visitByCafe, router],
+    [allCafes, visitByCafe, router],
   );
 
   const stats = useMemo(() => {
     const districts = new Set(
-      visits.map((v) => findCafe(v.cafeId)?.district).filter(Boolean),
+      visits.map((v) => cafeById.get(v.cafeId)?.district).filter(Boolean),
     );
     const signatureMatches = visits.filter((v) => {
-      const cafe = findCafe(v.cafeId);
+      const cafe = cafeById.get(v.cafeId);
       if (!cafe) return false;
       return v.orderedMenu.includes(cafe.signature_menu);
     }).length;
@@ -87,10 +94,10 @@ export default function CollectionScreen() {
       signature: signatureMatches.toString(),
       avg,
     };
-  }, [visits]);
+  }, [visits, cafeById]);
 
   const latest = visits[0];
-  const latestCafe = latest ? findCafe(latest.cafeId) : undefined;
+  const latestCafe = latest ? cafeById.get(latest.cafeId) : undefined;
 
   return (
     <ScrollView

@@ -18,26 +18,35 @@ import { PaperCard } from '@/components/ui/PaperCard';
 import { PhotoPicker } from '@/components/ui/PhotoPicker';
 import { StarRating } from '@/components/ui/StarRating';
 import { Text } from '@/components/ui/Text';
-import { CAFES_SEED, findCafe } from '@/constants/cafes-seed';
 import { colors } from '@/constants/theme';
 import { VIBES_SEED, vibesForCafeId } from '@/constants/vibes';
-import { useVisitsStore } from '@/stores/visits';
+import { useAllCafes, useCafe } from '@/lib/cafes';
+import { useVisitById, useVisitsStore } from '@/stores/visits';
 
 export default function NewVisitScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { cafe: cafeParam } = useLocalSearchParams<{ cafe?: string }>();
+  const { cafe: cafeParam, visit: visitParam } = useLocalSearchParams<{
+    cafe?: string;
+    visit?: string;
+  }>();
+  const editing = useVisitById(visitParam);
   const addVisit = useVisitsStore((s) => s.addVisit);
+  const updateVisit = useVisitsStore((s) => s.updateVisit);
+  const allCafes = useAllCafes();
 
-  const [cafeId, setCafeId] = useState<string | null>(cafeParam ?? null);
-  const [photoUri, setPhotoUri] = useState<string | null>(null);
-  const [orderedMenu, setOrderedMenu] = useState('');
-  const [rating, setRating] = useState(4);
-  const [notes, setNotes] = useState('');
-  const [vibes, setVibes] = useState<string[]>([]);
+  const initialCafeId = editing?.cafeId ?? cafeParam ?? null;
+
+  const [cafeId, setCafeId] = useState<string | null>(initialCafeId);
+  const [photoUri, setPhotoUri] = useState<string | null>(editing?.photoUri ?? null);
+  const [orderedMenu, setOrderedMenu] = useState(editing?.orderedMenu ?? '');
+  const [rating, setRating] = useState(editing?.rating ?? 4);
+  const [notes, setNotes] = useState(editing?.notes ?? '');
+  const [vibes, setVibes] = useState<string[]>(editing?.vibes ?? []);
   const [busy, setBusy] = useState(false);
 
-  const selectedCafe = cafeId ? findCafe(cafeId) : undefined;
+  const selectedCafe = useCafe(cafeId ?? undefined);
+  const isEditing = !!editing;
 
   const suggestedVibes = useMemo(() => {
     if (!cafeId) return VIBES_SEED.slice(0, 8);
@@ -63,14 +72,25 @@ export default function NewVisitScreen() {
     }
     try {
       setBusy(true);
-      addVisit({
-        cafeId,
-        photoUri,
-        orderedMenu: orderedMenu.trim(),
-        rating,
-        notes: notes.trim(),
-        vibes,
-      });
+      if (isEditing && editing) {
+        updateVisit(editing.id, {
+          cafeId,
+          photoUri,
+          orderedMenu: orderedMenu.trim(),
+          rating,
+          notes: notes.trim(),
+          vibes,
+        });
+      } else {
+        addVisit({
+          cafeId,
+          photoUri,
+          orderedMenu: orderedMenu.trim(),
+          rating,
+          notes: notes.trim(),
+          vibes,
+        });
+      }
       router.back();
     } catch {
       Alert.alert('저장이 어렵네요', '잠시 후 다시 시도해 주세요.');
@@ -100,7 +120,7 @@ export default function NewVisitScreen() {
             </Text>
           </Pressable>
           <Text variant="mono" size={9} letterSpacing={2.4} uppercase color={colors.honey}>
-            New Sticker
+            {isEditing ? 'Edit Sticker' : 'New Sticker'}
           </Text>
         </View>
 
@@ -111,7 +131,7 @@ export default function NewVisitScreen() {
             color={colors.mochaDark}
             style={{ textAlign: 'center', lineHeight: 34 }}
           >
-            오늘의 스티커
+            {isEditing ? '스티커 다시 붙이기' : '오늘의 스티커'}
           </Text>
           <Text
             variant="handwriteReg"
@@ -119,7 +139,7 @@ export default function NewVisitScreen() {
             color={colors.mochaLight}
             style={{ marginTop: 6, transform: [{ rotate: '-1deg' }] }}
           >
-            방금 어땠어요?
+            {isEditing ? '한 줄만 고쳐도 좋아요' : '방금 어땠어요?'}
           </Text>
         </View>
 
@@ -132,14 +152,39 @@ export default function NewVisitScreen() {
           </PaperCard>
         </Animated.View>
 
-        <SectionLabel mono="Cafe" kr="어디 다녀오셨나요" />
+        <View
+          style={{
+            marginTop: 28,
+            marginBottom: 4,
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'baseline',
+          }}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8 }}>
+            <Text variant="mono" size={9} letterSpacing={2} uppercase color={colors.honey}>
+              Cafe
+            </Text>
+            <Text variant="labelKr" size={13} color={colors.mochaDark}>
+              어디 다녀오셨나요
+            </Text>
+          </View>
+          <Pressable
+            onPress={() => router.push('/cafe/new')}
+            hitSlop={6}
+          >
+            <Text variant="handwriteReg" size={17} color={colors.honey}>
+              + 새 카페
+            </Text>
+          </Pressable>
+        </View>
         <PaperCard padding={4} shadow="sticker" rotation={0.3}>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={{ paddingVertical: 10, paddingHorizontal: 8, gap: 8 }}
           >
-            {CAFES_SEED.map((c) => {
+            {allCafes.map((c) => {
               const active = c.id === cafeId;
               return (
                 <Pressable
@@ -190,7 +235,9 @@ export default function NewVisitScreen() {
           <TextInput
             value={orderedMenu}
             onChangeText={setOrderedMenu}
-            placeholder={selectedCafe ? `예) ${selectedCafe.signature_menu}` : '예) 플랫화이트 + 크로플'}
+            placeholder={
+              selectedCafe ? `예) ${selectedCafe.signature_menu}` : '예) 플랫화이트 + 크로플'
+            }
             placeholderTextColor={'rgba(122,92,69,0.45)'}
             style={{
               fontFamily: 'Caveat-Medium',
@@ -225,9 +272,7 @@ export default function NewVisitScreen() {
                 <Chip
                   label={v.label}
                   variant={active ? v.display_color : 'cream'}
-                  style={{
-                    opacity: active ? 1 : 0.7,
-                  }}
+                  style={{ opacity: active ? 1 : 0.7 }}
                 />
               </Pressable>
             );
@@ -289,7 +334,13 @@ export default function NewVisitScreen() {
           })}
         >
           <Text variant="labelKr" size={15} color={colors.cream}>
-            {busy ? '도감에 붙이는 중...' : '스티커 붙이기'}
+            {busy
+              ? isEditing
+                ? '다시 붙이는 중...'
+                : '도감에 붙이는 중...'
+              : isEditing
+                ? '바꿔서 다시 붙이기'
+                : '스티커 붙이기'}
           </Text>
         </Pressable>
       </View>
@@ -299,7 +350,15 @@ export default function NewVisitScreen() {
 
 function SectionLabel({ mono, kr }: { mono: string; kr: string }) {
   return (
-    <View style={{ marginTop: 28, marginBottom: 4, flexDirection: 'row', alignItems: 'baseline', gap: 8 }}>
+    <View
+      style={{
+        marginTop: 28,
+        marginBottom: 4,
+        flexDirection: 'row',
+        alignItems: 'baseline',
+        gap: 8,
+      }}
+    >
       <Text variant="mono" size={9} letterSpacing={2} uppercase color={colors.honey}>
         {mono}
       </Text>

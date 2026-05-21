@@ -2,20 +2,21 @@ import { useRouter } from 'expo-router';
 import { Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { CupIcon } from '@/components/icons';
 import { MaskingTape } from '@/components/ui/MaskingTape';
 import { PaperCard } from '@/components/ui/PaperCard';
 import { Text } from '@/components/ui/Text';
-import { CupIcon } from '@/components/icons';
-import { CAFES_SEED } from '@/constants/cafes-seed';
 import { colors } from '@/constants/theme';
+import { useAllCafes } from '@/lib/cafes';
 import { useVisitsStore } from '@/stores/visits';
 
 export default function AddScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const visits = useVisitsStore((s) => s.visits);
+  const allCafes = useAllCafes();
   const visitedSet = new Set(visits.map((v) => v.cafeId));
-  const unvisited = CAFES_SEED.filter((c) => !visitedSet.has(c.id));
+  const unvisited = allCafes.filter((c) => !visitedSet.has(c.id));
 
   return (
     <ScrollView
@@ -48,7 +49,7 @@ export default function AddScreen() {
         </Text>
       </View>
 
-      <View style={{ marginTop: 16, marginBottom: 24, position: 'relative' }}>
+      <View style={{ marginTop: 16, marginBottom: 16, position: 'relative' }}>
         <View style={{ position: 'absolute', top: -10, left: 24, zIndex: 2 }}>
           <MaskingTape color="honey" width={70} height={18} rotation={-3} />
         </View>
@@ -96,13 +97,46 @@ export default function AddScreen() {
         </PaperCard>
       </View>
 
+      <Pressable
+        onPress={() => router.push('/cafe/new')}
+        style={({ pressed }) => ({
+          marginTop: 8,
+          paddingVertical: 14,
+          borderRadius: 14,
+          borderWidth: 1.5,
+          borderColor: colors.paperLineStrong,
+          borderStyle: 'dashed',
+          alignItems: 'center',
+          opacity: pressed ? 0.7 : 1,
+        })}
+      >
+        <Text
+          variant="handwriteReg"
+          size={19}
+          color={colors.honey}
+          style={{ transform: [{ rotate: '-1deg' }] }}
+        >
+          + 새 카페 도감에 추가
+        </Text>
+        <Text
+          variant="mono"
+          size={9}
+          letterSpacing={2}
+          uppercase
+          color={colors.mochaLight}
+          style={{ marginTop: 4 }}
+        >
+          add a new spot
+        </Text>
+      </Pressable>
+
       <Text
         variant="mono"
         size={9}
         letterSpacing={2}
         uppercase
         color={colors.mochaLight}
-        style={{ marginTop: 14, marginBottom: 12, paddingLeft: 4 }}
+        style={{ marginTop: 28, marginBottom: 12, paddingLeft: 4 }}
       >
         아직 안 가본 자리
       </Text>
@@ -117,11 +151,11 @@ export default function AddScreen() {
             transform: [{ rotate: '-1deg' }],
           }}
         >
-          시드 카페를 다 다녀오셨네요!
+          도감을 다 채우셨네요!
         </Text>
       ) : (
         <View style={{ gap: 10 }}>
-          {unvisited.slice(0, 6).map((c) => (
+          {unvisited.slice(0, 8).map((c) => (
             <Pressable
               key={c.id}
               onPress={() => router.push(`/visit/new?cafe=${c.id}`)}
