@@ -3,6 +3,7 @@ import { ScrollView, View } from 'react-native';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { BrandFooter } from '@/components/BrandFooter';
 import { BrandWordmark } from '@/components/BrandWordmark';
 import { StickerGrid, type StickerItem } from '@/components/StickerGrid';
 import { DiaryStatBlock } from '@/components/DiaryStatBlock';
@@ -181,6 +182,8 @@ export default function CollectionScreen() {
           </Text>
         </View>
       </View>
+
+      <BrandFooter />
     </ScrollView>
   );
 }
