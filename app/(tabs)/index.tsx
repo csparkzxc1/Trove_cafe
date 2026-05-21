@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BrandFooter } from '@/components/BrandFooter';
 import { BrandWordmark } from '@/components/BrandWordmark';
 import { DiaryStatBlock } from '@/components/DiaryStatBlock';
+import { FilterStrip } from '@/components/FilterStrip';
 import { PolaroidCard } from '@/components/PolaroidCard';
 import { StickerGrid, type StickerItem } from '@/components/StickerGrid';
 import { IntroBadge } from '@/components/ui/IntroBadge';
@@ -40,6 +41,8 @@ export default function CollectionScreen() {
   const user = useAuthStore((s) => s.user);
   const visits = useVisitsStore((s) => s.visits);
   const allCafes = useAllCafes();
+  const [districtFilter, setDistrictFilter] = useState<string | null>(null);
+  const [showOnlyVisited, setShowOnlyVisited] = useState(false);
 
   const cafeById = useMemo(() => {
     const map = new Map<string, (typeof allCafes)[number]>();
@@ -55,9 +58,17 @@ export default function CollectionScreen() {
     return map;
   }, [visits]);
 
+  const filteredCafes = useMemo(() => {
+    return allCafes.filter((c) => {
+      if (districtFilter && c.district !== districtFilter) return false;
+      if (showOnlyVisited && !visitByCafe.has(c.id)) return false;
+      return true;
+    });
+  }, [allCafes, districtFilter, showOnlyVisited, visitByCafe]);
+
   const items: StickerItem[] = useMemo(
     () =>
-      allCafes.map((c) => {
+      filteredCafes.map((c) => {
         const v = visitByCafe.get(c.id);
         return {
           id: c.id,
@@ -72,8 +83,14 @@ export default function CollectionScreen() {
           onPress: () => router.push(`/cafe/${c.id}`),
         };
       }),
-    [allCafes, visitByCafe, router],
+    [filteredCafes, visitByCafe, router],
   );
+
+  const districts = useMemo(() => {
+    const set = new Set<string>();
+    for (const c of allCafes) set.add(c.district);
+    return Array.from(set);
+  }, [allCafes]);
 
   const stats = useMemo(() => {
     const districts = new Set(
@@ -222,7 +239,7 @@ export default function CollectionScreen() {
           flexDirection: 'row',
           justifyContent: 'space-between',
           alignItems: 'baseline',
-          marginBottom: 20,
+          marginBottom: 12,
           marginTop: 8,
           paddingHorizontal: 4,
         }}
@@ -245,7 +262,36 @@ export default function CollectionScreen() {
         </Text>
       </View>
 
-      <StickerGrid items={items} startNumber={1} />
+      <FilterStrip
+        options={['붙인 스티커만', ...districts]}
+        value={showOnlyVisited ? '붙인 스티커만' : districtFilter}
+        onChange={(next) => {
+          if (next === '붙인 스티커만') {
+            setShowOnlyVisited(true);
+            setDistrictFilter(null);
+          } else {
+            setShowOnlyVisited(false);
+            setDistrictFilter(next);
+          }
+        }}
+      />
+
+      {items.length === 0 ? (
+        <View style={{ alignItems: 'center', paddingVertical: 40 }}>
+          <Text
+            variant="handwriteReg"
+            size={20}
+            color={colors.mochaLight}
+            style={{ transform: [{ rotate: '-1deg' }] }}
+          >
+            {showOnlyVisited
+              ? '아직 붙인 스티커가 없어요'
+              : '이 동네는 아직 비어 있어요'}
+          </Text>
+        </View>
+      ) : (
+        <StickerGrid items={items} startNumber={1} />
+      )}
 
       <View
         style={{
