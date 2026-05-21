@@ -223,8 +223,15 @@ create policy "auth users add cafes" on cafes for insert
 - GPS + Google Places 자동 매칭 (Places API 키 필요)
 - Claude Vision으로 누끼 + 카드 자동 생성 (Anthropic 키 필요)
 - Supabase 실연결 / 다중 디바이스 동기화 (URL/anon key 필요)
-- 폴라로이드 캡처 후 인스타 공유 (react-native-view-shot 도입 / dev build 필요)
 - 결제 / sub 컬렉션 (빵지순례, 케이크 도감)
+
+---
+
+## 공유 모드 동작
+
+- **Expo Go**: `react-native-view-shot`은 Expo Go에 번들되지 않아 이미지 캡처가 동작하지 않습니다. `shareVisitImage()` 호출이 실패하면 자동으로 텍스트 공유(RN 내장 `Share`)로 폴백합니다.
+- **Dev build / production**: `eas build --profile development` 후 view-shot가 동작 → 카페 상세의 "공유 ↗"가 폴라로이드를 PNG로 캡처하고 `expo-sharing`으로 시스템 share sheet를 띄움 (인스타·카카오톡·메시지 등에 이미지로 전송).
+- 캡처용 컴포넌트 `components/ShareablePolaroid.tsx`는 오프스크린(opacity 0, 좌상단 -9999)으로 렌더됩니다.
 
 ---
 

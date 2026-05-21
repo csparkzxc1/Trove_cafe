@@ -1,39 +1,23 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useMemo } from 'react';
-import { Alert, Pressable, ScrollView, Share, View } from 'react-native';
+import { useMemo, useRef, useState } from 'react';
+import { Alert, Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { PolaroidCard } from '@/components/PolaroidCard';
+import { ShareablePolaroid } from '@/components/ShareablePolaroid';
 import { Chip } from '@/components/ui/Chip';
 import { FadeInDown, FadeInView } from '@/components/ui/FadeInView';
 import { Text } from '@/components/ui/Text';
 import { colors } from '@/constants/theme';
 import { VIBES_SEED, vibesForCafeId, type VibeColor } from '@/constants/vibes';
 import { isUserCafe, useCafe } from '@/lib/cafes';
+import { shareVisitImage } from '@/lib/share';
 import { useUserCafesStore } from '@/stores/cafes';
-import { useVisitForCafe, useVisitsStore, type Visit } from '@/stores/visits';
-import type { AppCafe } from '@/lib/cafes';
+import { useVisitForCafe, useVisitsStore } from '@/stores/visits';
 import { CAFES_SEED } from '@/constants/cafes-seed';
 
 export function generateStaticParams(): { id: string }[] {
   return CAFES_SEED.map((c) => ({ id: c.id }));
-}
-
-function buildShareText(cafe: AppCafe, visit: Visit): string {
-  const stars = '★'.repeat(Math.round(visit.rating)) + '☆'.repeat(5 - Math.round(visit.rating));
-  const d = new Date(visit.visitedAt);
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
-  const lines: string[] = [];
-  lines.push(`📒 ${cafe.name} · ${cafe.district}`);
-  if (visit.orderedMenu) lines.push(`☕ ${visit.orderedMenu}`);
-  lines.push(`${stars}  ${yyyy}.${mm}.${dd}`);
-  if (visit.notes) lines.push(`"${visit.notes}"`);
-  if (visit.vibes.length > 0) lines.push(`#${visit.vibes.join(' #')}`);
-  lines.push('');
-  lines.push('via Trove Cafe — 오늘 카페, 도감에 붙이기.');
-  return lines.join('\n');
 }
 
 function formatDateLine(iso: string): string {
@@ -55,6 +39,8 @@ export default function CafeDetailScreen() {
   const visit = useVisitForCafe(id ?? '');
   const removeVisit = useVisitsStore((s) => s.removeVisit);
   const removeUserCafe = useUserCafesStore((s) => s.removeCafe);
+  const shareRef = useRef<View>(null);
+  const [sharing, setSharing] = useState(false);
 
   const vibesToShow = useMemo<{ label: string; display_color: VibeColor }[]>(() => {
     if (!cafe) return [];
@@ -107,12 +93,14 @@ export default function CafeDetailScreen() {
 
   async function handleShare() {
     if (!cafe || !visit) return;
+    setSharing(true);
     try {
-      await Share.share({
-        message: buildShareText(cafe, visit),
-      });
-    } catch {
-      Alert.alert('공유가 어렵네요', '잠시 후 다시 시도해 주세요.');
+      const result = await shareVisitImage(shareRef, cafe, visit);
+      if (result === 'failed') {
+        Alert.alert('공유가 어렵네요', '잠시 후 다시 시도해 주세요.');
+      }
+    } finally {
+      setSharing(false);
     }
   }
 
@@ -268,16 +256,17 @@ export default function CafeDetailScreen() {
               </Pressable>
               <Pressable
                 onPress={handleShare}
+                disabled={sharing}
                 style={({ pressed }) => ({
                   paddingHorizontal: 22,
                   paddingVertical: 14,
                   borderRadius: 999,
                   backgroundColor: colors.mocha,
-                  opacity: pressed ? 0.85 : 1,
+                  opacity: pressed || sharing ? 0.85 : 1,
                 })}
               >
                 <Text variant="labelKr" size={14} color={colors.cream}>
-                  공유 ↗
+                  {sharing ? '준비 중...' : '공유 ↗'}
                 </Text>
               </Pressable>
             </View>
@@ -345,6 +334,20 @@ export default function CafeDetailScreen() {
           </Pressable>
         ) : null}
       </ScrollView>
+
+      {visit ? (
+        <View
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            left: -9999,
+            top: -9999,
+            opacity: 0,
+          }}
+        >
+          <ShareablePolaroid ref={shareRef} cafe={cafe} visit={visit} />
+        </View>
+      ) : null}
     </View>
   );
 }
