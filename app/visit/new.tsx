@@ -9,7 +9,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import { FadeInDown, FadeInView } from '@/components/ui/FadeInView';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Chip } from '@/components/ui/Chip';
@@ -143,14 +143,14 @@ export default function NewVisitScreen() {
           </Text>
         </View>
 
-        <Animated.View entering={FadeInDown.duration(500)} style={{ position: 'relative' }}>
+        <FadeInView enter={FadeInDown.duration(500)} style={{ position: 'relative' }}>
           <View style={{ position: 'absolute', top: -10, left: 28, zIndex: 2 }}>
             <MaskingTape color="dusty" width={66} height={18} rotation={-4} />
           </View>
           <PaperCard rotation={-0.4} padding={18} shadow="polaroid">
             <PhotoPicker value={photoUri} onChange={setPhotoUri} />
           </PaperCard>
-        </Animated.View>
+        </FadeInView>
 
         <View
           style={{

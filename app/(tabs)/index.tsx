@@ -1,7 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { ScrollView, View } from 'react-native';
-import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
+import { ScrollView, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BrandFooter } from '@/components/BrandFooter';
@@ -10,6 +9,7 @@ import { DiaryStatBlock } from '@/components/DiaryStatBlock';
 import { FilterStrip } from '@/components/FilterStrip';
 import { PolaroidCard } from '@/components/PolaroidCard';
 import { StickerGrid, type StickerItem } from '@/components/StickerGrid';
+import { FadeInDown, FadeInUp, FadeInView } from '@/components/ui/FadeInView';
 import { IntroBadge } from '@/components/ui/IntroBadge';
 import { Text } from '@/components/ui/Text';
 import { colors } from '@/constants/theme';
@@ -43,6 +43,7 @@ export default function CollectionScreen() {
   const allCafes = useAllCafes();
   const [districtFilter, setDistrictFilter] = useState<string | null>(null);
   const [showOnlyVisited, setShowOnlyVisited] = useState(false);
+  const [query, setQuery] = useState('');
 
   const cafeById = useMemo(() => {
     const map = new Map<string, (typeof allCafes)[number]>();
@@ -59,12 +60,27 @@ export default function CollectionScreen() {
   }, [visits]);
 
   const filteredCafes = useMemo(() => {
+    const q = query.trim().toLowerCase();
     return allCafes.filter((c) => {
       if (districtFilter && c.district !== districtFilter) return false;
       if (showOnlyVisited && !visitByCafe.has(c.id)) return false;
+      if (q.length > 0) {
+        const v = visitByCafe.get(c.id);
+        const hay = [
+          c.name,
+          c.district,
+          c.category,
+          c.signature_menu,
+          v?.orderedMenu ?? '',
+          v?.notes ?? '',
+        ]
+          .join(' ')
+          .toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
       return true;
     });
-  }, [allCafes, districtFilter, showOnlyVisited, visitByCafe]);
+  }, [allCafes, districtFilter, showOnlyVisited, visitByCafe, query]);
 
   const items: StickerItem[] = useMemo(
     () =>
@@ -145,8 +161,8 @@ export default function CollectionScreen() {
         </View>
       </View>
 
-      <Animated.View
-        entering={FadeInUp.delay(100).duration(800)}
+      <FadeInView
+        enter={FadeInUp.delay(100).duration(800)}
         style={{ alignItems: 'center', paddingTop: 24, paddingBottom: 32 }}
       >
         <IntroBadge label="Cafe Diary · Seoul" />
@@ -177,9 +193,9 @@ export default function CollectionScreen() {
         >
           Stick the places you love.
         </Text>
-      </Animated.View>
+      </FadeInView>
 
-      <Animated.View entering={FadeInDown.delay(300).duration(700)}>
+      <FadeInView enter={FadeInDown.delay(300).duration(700)}>
         <DiaryStatBlock
           pageNumber={stats.visitCount}
           monthLabel={MONTH_LABEL}
@@ -194,11 +210,11 @@ export default function CollectionScreen() {
             { value: stats.avg === '- -' ? '- -' : `★ ${stats.avg}`, label: '평균' },
           ]}
         />
-      </Animated.View>
+      </FadeInView>
 
       {latest && latestCafe ? (
-        <Animated.View
-          entering={FadeInDown.delay(400).duration(700)}
+        <FadeInView
+          enter={FadeInDown.delay(400).duration(700)}
           style={{ marginTop: 8, marginBottom: 28 }}
         >
           <View style={{ alignItems: 'center', marginBottom: 12 }}>
@@ -231,7 +247,7 @@ export default function CollectionScreen() {
             dateLine={formatDateLine(latest.visitedAt)}
             visited
           />
-        </Animated.View>
+        </FadeInView>
       ) : null}
 
       <View
@@ -262,6 +278,36 @@ export default function CollectionScreen() {
         </Text>
       </View>
 
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 8,
+          paddingHorizontal: 4,
+          paddingVertical: 4,
+          marginBottom: 6,
+        }}
+      >
+        <Text variant="mono" size={10} color={colors.mochaLight}>
+          ⌕
+        </Text>
+        <TextInput
+          value={query}
+          onChangeText={setQuery}
+          placeholder="카페·메뉴·동네로 검색"
+          placeholderTextColor={'rgba(122,92,69,0.45)'}
+          style={{
+            flex: 1,
+            fontFamily: 'Pretendard-Medium',
+            fontSize: 14,
+            color: colors.mochaDark,
+            paddingVertical: 8,
+            borderBottomWidth: 1,
+            borderColor: colors.paperLine,
+          }}
+        />
+      </View>
+
       <FilterStrip
         options={['붙인 스티커만', ...districts]}
         value={showOnlyVisited ? '붙인 스티커만' : districtFilter}
@@ -284,9 +330,11 @@ export default function CollectionScreen() {
             color={colors.mochaLight}
             style={{ transform: [{ rotate: '-1deg' }] }}
           >
-            {showOnlyVisited
-              ? '아직 붙인 스티커가 없어요'
-              : '이 동네는 아직 비어 있어요'}
+            {query.trim().length > 0
+              ? '검색 결과가 없어요'
+              : showOnlyVisited
+                ? '아직 붙인 스티커가 없어요'
+                : '이 동네는 아직 비어 있어요'}
           </Text>
         </View>
       ) : (

@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { View } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
 
+import { FadeInView, FadeInDown } from '@/components/ui/FadeInView';
 import { StickerCard, type StickerCardProps } from '@/components/StickerCard';
 import {
   imageBgForIndex,
@@ -62,9 +62,9 @@ export function StickerGrid({ items, startNumber = 1 }: Props) {
               ...cardProps
             } = item;
             return (
-              <Animated.View
+              <FadeInView
                 key={item.id}
-                entering={FadeInDown.delay(80 * flatIdx)
+                enter={FadeInDown.delay(80 * flatIdx)
                   .duration(700)
                   .springify()
                   .damping(15)}
@@ -76,7 +76,7 @@ export function StickerGrid({ items, startNumber = 1 }: Props) {
                   imageBg={bg}
                   numStamp={num}
                 />
-              </Animated.View>
+              </FadeInView>
             );
           })}
           {row.length === 1 ? <View style={{ flex: 1 }} /> : null}
