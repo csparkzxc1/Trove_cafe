@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { Alert, Pressable, ScrollView, Share, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { DrinkIcon, StarIcon } from '@/components/icons';
@@ -12,6 +12,8 @@ import { Text } from '@/components/ui/Text';
 import { colors } from '@/constants/theme';
 import { useAllCafes } from '@/lib/cafes';
 import { useAuthStore } from '@/stores/auth';
+import { useUserCafesStore } from '@/stores/cafes';
+import { useSettingsStore } from '@/stores/settings';
 import { useVisitsStore, type Visit } from '@/stores/visits';
 import type { AppCafe } from '@/lib/cafes';
 
@@ -21,7 +23,46 @@ export default function ProfileScreen() {
   const user = useAuthStore((s) => s.user);
   const signOut = useAuthStore((s) => s.signOut);
   const visits = useVisitsStore((s) => s.visits);
+  const resetVisits = useVisitsStore((s) => s.reset);
+  const userCafes = useUserCafesStore((s) => s.cafes);
+  const resetOnboarding = useSettingsStore((s) => s.resetOnboarding);
   const allCafes = useAllCafes();
+
+  async function handleExport() {
+    const payload = {
+      app: 'trove-cafe',
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      visits,
+      userCafes,
+    };
+    try {
+      await Share.share({
+        message: JSON.stringify(payload, null, 2),
+      });
+    } catch {
+      Alert.alert('내보내기가 어렵네요', '잠시 후 다시 시도해 주세요.');
+    }
+  }
+
+  function handleReset() {
+    Alert.alert(
+      '도감을 비울까요?',
+      '붙인 스티커가 모두 사라지고 직접 추가한 카페도 사라져요. 시드 카페만 남아요.',
+      [
+        { text: '취소', style: 'cancel' },
+        {
+          text: '비우기',
+          style: 'destructive',
+          onPress: () => {
+            resetVisits();
+            useUserCafesStore.setState({ cafes: [] });
+            resetOnboarding();
+          },
+        },
+      ],
+    );
+  }
 
   const stats = useMemo(() => {
     const cafeById = new Map(allCafes.map((c) => [c.id, c] as const));
@@ -179,6 +220,72 @@ export default function ProfileScreen() {
             })}
           </View>
         )}
+      </View>
+
+      <View style={{ marginTop: 32 }}>
+        <Text variant="titleKr" size={16} color={colors.mochaDark} style={{ marginBottom: 12 }}>
+          도감 관리
+        </Text>
+        <View style={{ gap: 8 }}>
+          <Pressable
+            onPress={handleExport}
+            disabled={visits.length === 0 && userCafes.length === 0}
+            style={({ pressed }) => ({
+              paddingHorizontal: 16,
+              paddingVertical: 14,
+              borderRadius: 14,
+              backgroundColor: colors.cream,
+              borderWidth: 1,
+              borderColor: colors.paperLine,
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              opacity:
+                pressed || (visits.length === 0 && userCafes.length === 0) ? 0.6 : 1,
+            })}
+          >
+            <View>
+              <Text variant="labelKr" size={14} color={colors.mochaDark}>
+                백업으로 내보내기
+              </Text>
+              <Text
+                variant="mono"
+                size={9}
+                letterSpacing={1.5}
+                uppercase
+                color={colors.mochaLight}
+                style={{ marginTop: 2 }}
+              >
+                JSON · {visits.length} visits · {userCafes.length} cafes
+              </Text>
+            </View>
+            <Text variant="handwriteReg" size={18} color={colors.honey}>
+              내보내기 ↗
+            </Text>
+          </Pressable>
+
+          <Pressable
+            onPress={handleReset}
+            style={({ pressed }) => ({
+              paddingHorizontal: 16,
+              paddingVertical: 14,
+              borderRadius: 14,
+              borderWidth: 1,
+              borderColor: colors.paperLine,
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              opacity: pressed ? 0.8 : 1,
+            })}
+          >
+            <Text variant="labelKr" size={14} color={colors.mochaLight}>
+              도감 비우기
+            </Text>
+            <Text variant="mono" size={10} color={colors.dusty}>
+              reset
+            </Text>
+          </Pressable>
+        </View>
       </View>
 
       <Pressable

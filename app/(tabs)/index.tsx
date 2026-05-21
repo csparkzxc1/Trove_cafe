@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { ScrollView, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BrandFooter } from '@/components/BrandFooter';
@@ -15,6 +15,7 @@ import { Text } from '@/components/ui/Text';
 import { colors } from '@/constants/theme';
 import { useAllCafes } from '@/lib/cafes';
 import { useAuthStore } from '@/stores/auth';
+import { useSettingsStore, type SortMode } from '@/stores/settings';
 import { useVisitsStore, type Visit } from '@/stores/visits';
 
 const MONTH_LABEL = (() => {
@@ -44,6 +45,10 @@ export default function CollectionScreen() {
   const [districtFilter, setDistrictFilter] = useState<string | null>(null);
   const [showOnlyVisited, setShowOnlyVisited] = useState(false);
   const [query, setQuery] = useState('');
+  const sortMode = useSettingsStore((s) => s.sortMode);
+  const setSortMode = useSettingsStore((s) => s.setSortMode);
+  const hasDismissedOnboarding = useSettingsStore((s) => s.hasDismissedOnboarding);
+  const dismissOnboarding = useSettingsStore((s) => s.dismissOnboarding);
 
   const cafeById = useMemo(() => {
     const map = new Map<string, (typeof allCafes)[number]>();
@@ -61,7 +66,7 @@ export default function CollectionScreen() {
 
   const filteredCafes = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return allCafes.filter((c) => {
+    const filtered = allCafes.filter((c) => {
       if (districtFilter && c.district !== districtFilter) return false;
       if (showOnlyVisited && !visitByCafe.has(c.id)) return false;
       if (q.length > 0) {
@@ -80,7 +85,26 @@ export default function CollectionScreen() {
       }
       return true;
     });
-  }, [allCafes, districtFilter, showOnlyVisited, visitByCafe, query]);
+
+    if (sortMode === 'default') return filtered;
+
+    // Sort visited cafes by the chosen criterion, push unvisited to the end
+    return [...filtered].sort((a, b) => {
+      const va = visitByCafe.get(a.id);
+      const vb = visitByCafe.get(b.id);
+      if (va && !vb) return -1;
+      if (!va && vb) return 1;
+      if (!va && !vb) return 0;
+      if (sortMode === 'recent') {
+        return (vb!.visitedAt < va!.visitedAt ? -1 : 1);
+      }
+      if (sortMode === 'rating') {
+        if (vb!.rating !== va!.rating) return vb!.rating - va!.rating;
+        return vb!.visitedAt < va!.visitedAt ? -1 : 1;
+      }
+      return 0;
+    });
+  }, [allCafes, districtFilter, showOnlyVisited, visitByCafe, query, sortMode]);
 
   const items: StickerItem[] = useMemo(
     () =>
@@ -321,6 +345,101 @@ export default function CollectionScreen() {
           }
         }}
       />
+
+      {stats.visitCount > 1 ? (
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'flex-end',
+            alignItems: 'center',
+            gap: 4,
+            marginTop: 4,
+            marginBottom: 8,
+            paddingHorizontal: 4,
+          }}
+        >
+          <Text
+            variant="mono"
+            size={9}
+            letterSpacing={1.6}
+            uppercase
+            color={colors.mochaLight}
+          >
+            정렬
+          </Text>
+          {(
+            [
+              { key: 'default', label: '도감' },
+              { key: 'recent', label: '최근' },
+              { key: 'rating', label: '별점' },
+            ] as { key: SortMode; label: string }[]
+          ).map((opt) => {
+            const active = sortMode === opt.key;
+            return (
+              <Pressable
+                key={opt.key}
+                onPress={() => setSortMode(opt.key)}
+                style={{ paddingHorizontal: 8, paddingVertical: 4 }}
+              >
+                <Text
+                  variant="labelKr"
+                  size={11}
+                  color={active ? colors.honey : colors.mochaLight}
+                  style={{ opacity: active ? 1 : 0.7 }}
+                >
+                  {opt.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      ) : null}
+
+      {stats.visitCount === 0 && !hasDismissedOnboarding ? (
+        <View
+          style={{
+            backgroundColor: colors.cream,
+            borderRadius: 14,
+            paddingHorizontal: 16,
+            paddingVertical: 14,
+            marginBottom: 12,
+            borderWidth: 1,
+            borderColor: colors.paperLine,
+            flexDirection: 'row',
+            alignItems: 'flex-start',
+            gap: 12,
+          }}
+        >
+          <View style={{ flex: 1 }}>
+            <Text
+              variant="mono"
+              size={9}
+              letterSpacing={2}
+              uppercase
+              color={colors.honey}
+              style={{ marginBottom: 4 }}
+            >
+              First Sticker
+            </Text>
+            <Text variant="bodyKrMed" size={13} color={colors.mochaDark} style={{ lineHeight: 19 }}>
+              아래 카드를 눌러 첫 카페를 골라보세요.
+            </Text>
+            <Text
+              variant="handwriteReg"
+              size={16}
+              color={colors.honey}
+              style={{ marginTop: 4, transform: [{ rotate: '-1deg' }] }}
+            >
+              사진 한 장이면 충분해요
+            </Text>
+          </View>
+          <Pressable onPress={dismissOnboarding} hitSlop={8}>
+            <Text variant="mono" size={10} color={colors.mochaLight}>
+              ✕
+            </Text>
+          </Pressable>
+        </View>
+      ) : null}
 
       {items.length === 0 ? (
         <View style={{ alignItems: 'center', paddingVertical: 40 }}>
